@@ -582,6 +582,81 @@ input:focus-visible {
   background: var(--faint);
 }
 
+.source-card-main {
+  min-width: 0;
+}
+
+.source-metrics {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.source-error {
+  margin-top: 6px;
+  color: var(--red);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.source-status.ok .status-dot {
+  background: var(--green);
+}
+
+.source-status.error .status-dot,
+.source-status.blocked .status-dot {
+  background: var(--red);
+}
+
+.source-status.disabled .status-dot {
+  background: var(--faint);
+}
+
+.run-panel {
+  margin-top: 18px;
+}
+
+.run-table-scroll {
+  overflow-x: auto;
+}
+
+.run-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.run-table th,
+.run-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 11px 14px;
+  font-size: 11px;
+  vertical-align: top;
+}
+
+.run-table th {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.run-table td:nth-child(4),
+.run-table td:nth-child(5) {
+  font-variant-numeric: tabular-nums;
+}
+
+.source-job-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.source-job-link:hover {
+  text-decoration-thickness: 2px;
+}
+
 .run-empty {
   margin-top: 18px;
   padding: 27px 20px;

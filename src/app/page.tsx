@@ -1,16 +1,19 @@
 import { AppShell } from "@/components/app-shell";
-import { demoJobs } from "@/lib/jobs";
+import type { TrackerJob } from "@/lib/jobs";
 import type { Database } from "@/lib/database.types";
+import { hasSupabaseReadCredentials, readLocalRunSnapshot } from "@/lib/run-storage";
+import { SOURCES } from "../../scrapers/config";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function JobsPage() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const demoMode = !supabaseUrl || !supabaseAnonKey;
-  let jobs = [...demoJobs].sort((left, right) => right.score - left.score);
-  let loadError: string | undefined;
+export const dynamic = "force-dynamic";
 
-  if (!demoMode) {
+export default async function JobsPage() {
+  const hasSupabase = hasSupabaseReadCredentials();
+  let jobs: TrackerJob[] = [];
+  let loadError: string | undefined;
+  let localRunFinishedAt: string | null = null;
+
+  if (hasSupabase) {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("jobs")
@@ -20,20 +23,72 @@ export default async function JobsPage() {
 
     if (error) {
       loadError = `Could not load jobs from Supabase: ${error.message}`;
-      jobs = [];
     } else {
       const rows: Database["public"]["Tables"]["jobs"]["Row"][] = data ?? [];
-      jobs = rows.map((job) => ({
-        id: job.id,
-        title: job.title,
-        company: job.company ?? "Company not listed",
-        source: "Saved in tracker",
-        pay: job.pay_text ?? "Pay not listed",
-        region: job.region_note ?? "Location not stated",
-        tags: job.software ?? [],
-        score: job.score ?? 0,
-        posterType: job.poster_type ?? "unknown",
-      }));
+      if (rows.length) {
+        const { data: sourceRows, error: sourceError } = await supabase
+          .from("job_sources")
+          .select("job_id, source_id, url")
+          .in("job_id", rows.map(({ id }) => id));
+        if (sourceError) {
+          loadError = `Could not load job source links: ${sourceError.message}`;
+        } else {
+          const linksByJob = new Map<string, TrackerJob["sourceLinks"]>();
+          const jobSourceRows: Database["public"]["Tables"]["job_sources"]["Row"][] =
+            sourceRows ?? [];
+          for (const source of jobSourceRows) {
+            const links = linksByJob.get(source.job_id) ?? [];
+            links.push({
+              sourceId: source.source_id,
+              name:
+                SOURCES.find(({ id }) => id === source.source_id)?.name ??
+                source.source_id,
+              url: source.url,
+            });
+            linksByJob.set(source.job_id, links);
+          }
+
+          jobs = rows.map((job) => ({
+            id: job.id,
+            dedupeKey: job.dedupe_key,
+            title: job.title,
+            company: job.company ?? "Company not listed",
+            description: job.description ?? "",
+            sourceLinks: linksByJob.get(job.id) ?? [],
+            pay: job.pay_text ?? "Pay not listed",
+            region: job.region_note ?? "Location not stated",
+            tags: job.software ?? [],
+            score: job.score ?? 0,
+            posterType: job.poster_type ?? "unknown",
+          }));
+        }
+      }
+    }
+  } else {
+    try {
+      const snapshot = await readLocalRunSnapshot();
+      localRunFinishedAt = snapshot?.finishedAt ?? null;
+      jobs =
+        snapshot?.jobs.map((job) => ({
+          id: job.dedupe_key,
+          dedupeKey: job.dedupe_key,
+          title: job.title,
+          company: job.company,
+          description: job.description,
+          sourceLinks: job.sources.map((source) => ({
+            ...source,
+            name:
+              SOURCES.find(({ id }) => id === source.sourceId)?.name ??
+              source.sourceId,
+          })),
+          pay: job.pay_text ?? "Pay not listed",
+          region: job.region_note ?? "Location not stated",
+          tags: job.software,
+          score: job.score,
+          posterType: job.poster_type,
+        })) ?? [];
+    } catch (error) {
+      loadError = `Could not read the local scraper results: ${error instanceof Error ? error.message : String(error)}`;
     }
   }
 
@@ -47,7 +102,7 @@ export default async function JobsPage() {
   return (
     <AppShell
       description="A focused view of home care scheduling and coordinator roles."
-      demoMode={demoMode}
+      dataLabel={hasSupabase ? "Supabase" : "Local results"}
       title="Jobs"
     >
       <section aria-label="Job overview" className="summary-grid">
@@ -81,7 +136,11 @@ export default async function JobsPage() {
         </div>
         <div className="jobs-list">
           {jobs.length === 0 && !loadError ? (
-            <p className="empty-state">No jobs yet. Add the demo seed data to check the dashboard.</p>
+            <p className="empty-state">
+              {localRunFinishedAt
+                ? `The latest collection finished ${new Date(localRunFinishedAt).toLocaleString()} and found no listings matching the configured keywords and exclusions.`
+                : "No live jobs are available yet. Run npm run scrape to collect results."}
+            </p>
           ) : jobs.map((job) => (
             <article className="job-row" key={job.id}>
               <div className="job-main">
@@ -101,7 +160,23 @@ export default async function JobsPage() {
                   <span aria-hidden="true" className="job-meta-dot">
                     ·
                   </span>
-                  <span>{job.source}</span>
+                  <span>
+                    {job.sourceLinks.length
+                      ? job.sourceLinks.map((source, index) => (
+                          <span key={`${source.sourceId}-${source.url}`}>
+                            {index > 0 && ", "}
+                            <a
+                              className="source-job-link"
+                              href={source.url}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              {source.name}
+                            </a>
+                          </span>
+                        ))
+                      : "Source link unavailable"}
+                  </span>
                   <span aria-hidden="true" className="job-meta-dot">
                     ·
                   </span>

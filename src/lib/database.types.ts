@@ -1,66 +1,3 @@
-type TableDefinition<Row, Insert> = {
-  Row: Row;
-  Insert: Insert;
-  Update: Partial<Insert>;
-  Relationships: [];
-};
-
-type SourceRow = {
-  id: string;
-  name: string;
-  method: "api" | "rss" | "html";
-  enabled: boolean | null;
-  last_run_at: string | null;
-  last_status: "ok" | "error" | "blocked" | null;
-  last_error: string | null;
-};
-
-type SourceInsert = {
-  id: string;
-  name: string;
-  method: "api" | "rss" | "html";
-  enabled?: boolean | null;
-  last_run_at?: string | null;
-  last_status?: "ok" | "error" | "blocked" | null;
-  last_error?: string | null;
-};
-
-type JobSourceRow = {
-  job_id: string;
-  source_id: string;
-  url: string;
-  seen_at: string | null;
-};
-
-type JobSourceInsert = {
-  job_id: string;
-  source_id: string;
-  url: string;
-  seen_at?: string | null;
-};
-
-type RunRow = {
-  id: string;
-  started_at: string | null;
-  finished_at: string | null;
-  source_id: string | null;
-  status: string | null;
-  jobs_found: number | null;
-  jobs_new: number | null;
-  error: string | null;
-};
-
-type RunInsert = {
-  id?: string;
-  started_at?: string | null;
-  finished_at?: string | null;
-  source_id?: string | null;
-  status?: string | null;
-  jobs_found?: number | null;
-  jobs_new?: number | null;
-  error?: string | null;
-};
-
 export type Database = {
   public: {
     Tables: {
@@ -151,9 +88,90 @@ export type Database = {
         };
         Relationships: [];
       };
-      sources: TableDefinition<SourceRow, SourceInsert>;
-      job_sources: TableDefinition<JobSourceRow, JobSourceInsert>;
-      runs: TableDefinition<RunRow, RunInsert>;
+      sources: {
+        Row: {
+          id: string;
+          name: string;
+          method: "api" | "rss" | "html";
+          enabled: boolean | null;
+          last_run_at: string | null;
+          last_status: "ok" | "error" | "blocked" | null;
+          last_error: string | null;
+        };
+        Insert: {
+          id: string;
+          name: string;
+          method: "api" | "rss" | "html";
+          enabled?: boolean | null;
+          last_run_at?: string | null;
+          last_status?: "ok" | "error" | "blocked" | null;
+          last_error?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          method?: "api" | "rss" | "html";
+          enabled?: boolean | null;
+          last_run_at?: string | null;
+          last_status?: "ok" | "error" | "blocked" | null;
+          last_error?: string | null;
+        };
+        Relationships: [];
+      };
+      job_sources: {
+        Row: {
+          job_id: string;
+          source_id: string;
+          url: string;
+          seen_at: string | null;
+        };
+        Insert: {
+          job_id: string;
+          source_id: string;
+          url: string;
+          seen_at?: string | null;
+        };
+        Update: {
+          job_id?: string;
+          source_id?: string;
+          url?: string;
+          seen_at?: string | null;
+        };
+        Relationships: [];
+      };
+      runs: {
+        Row: {
+          id: string;
+          started_at: string | null;
+          finished_at: string | null;
+          source_id: string | null;
+          status: string | null;
+          jobs_found: number | null;
+          jobs_new: number | null;
+          error: string | null;
+        };
+        Insert: {
+          id?: string;
+          started_at?: string | null;
+          finished_at?: string | null;
+          source_id?: string | null;
+          status?: string | null;
+          jobs_found?: number | null;
+          jobs_new?: number | null;
+          error?: string | null;
+        };
+        Update: {
+          id?: string;
+          started_at?: string | null;
+          finished_at?: string | null;
+          source_id?: string | null;
+          status?: string | null;
+          jobs_found?: number | null;
+          jobs_new?: number | null;
+          error?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

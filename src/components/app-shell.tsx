@@ -12,12 +12,12 @@ export function AppShell({
   children,
   title,
   description,
-  demoMode = true,
+  dataLabel = "Live data",
 }: {
   children: ReactNode;
   title: string;
   description: string;
-  demoMode?: boolean;
+  dataLabel?: string;
 }) {
   return (
     <div className="app-shell">
@@ -69,7 +69,7 @@ export function AppShell({
           <div className="topbar-actions">
             <span className="demo-chip">
               <span className="status-dot" />
-              {demoMode ? "Demo data" : "Saved jobs"}
+              {dataLabel}
             </span>
             <ThemeToggle />
           </div>
