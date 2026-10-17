@@ -9,13 +9,16 @@ import {
   processJob,
 } from "../src/lib/processing";
 import { readLocalRunSnapshot } from "../src/lib/run-storage";
-import { SOURCES } from "./config";
+import { SOURCES, WORKABLE_BOARDS, type SourceId } from "./config";
 import { SourceBlockedError } from "./http";
 import { scrapeHimalayas } from "./sources/himalayas";
 import { scrapeRemotive } from "./sources/remotive";
 import { scrapeRemoteOk } from "./sources/remoteok";
 import { scrapeWeWorkRemotely } from "./sources/weworkremotely";
 import { scrapeWorkingNomads } from "./sources/workingnomads";
+import { scrapeJobStreet } from "./sources/jobstreet";
+import { scrapeOnlineJobs } from "./sources/onlinejobs";
+import { scrapeWorkableBoard } from "./sources/workable";
 import type {
   JobAuditRecord,
   LocalRunAudit,
@@ -31,13 +34,18 @@ type Scraper = () => Promise<RawJob[]>;
 
 const auditRecords: JobAuditRecord[] = [];
 
-const scrapers: Partial<Record<string, Scraper>> = {
+const scrapers: Partial<Record<SourceId, Scraper>> = {
   remotive: scrapeRemotive,
   remoteok: scrapeRemoteOk,
   weworkremotely: scrapeWeWorkRemotely,
   himalayas: scrapeHimalayas,
   workingnomads: scrapeWorkingNomads,
+  onlinejobs: scrapeOnlineJobs,
+  jobstreet: scrapeJobStreet,
 };
+for (const board of WORKABLE_BOARDS) {
+  scrapers[board.id] = () => scrapeWorkableBoard(board.id);
+}
 
 const startedAt = new Date().toISOString();
 

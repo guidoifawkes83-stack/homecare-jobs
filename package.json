@@ -15,6 +15,7 @@
     "@next/env": "^16.4.2",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.8",
+    "cheerio": "^1.2.0",
     "fast-xml-parser": "^5.11.2",
     "next": "16.4.2",
     "react": "^19.1.0",

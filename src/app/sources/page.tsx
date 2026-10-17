@@ -156,8 +156,8 @@ export default async function SourcesPage() {
       title="Sources & runs"
     >
       <p className="section-intro">
-        Public API and RSS sources are fetched independently. Remotive results
-        are delayed by 24 hours.
+        Public APIs, RSS feeds, and permitted public listing pages are fetched
+        independently. Remotive results are delayed by 24 hours.
       </p>
       {loadError && (
         <p className="error-banner" role="alert">

@@ -1,5 +1,5 @@
 const USER_AGENT =
-  "HomeCareJobsTracker/1.0 (personal job search; public API and RSS feeds)";
+  "HomeCareJobsTracker/1.0 (personal job search; public job listings)";
 const MIN_REQUEST_INTERVAL_MS = 1_000;
 const REQUEST_TIMEOUT_MS = 20_000;
 const MAX_RESPONSE_CHARS = 15_000_000;

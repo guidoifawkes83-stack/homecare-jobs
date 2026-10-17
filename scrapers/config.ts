@@ -6,7 +6,11 @@ export type SourceId =
   | "workingnomads"
   | "onlinejobs"
   | "jobstreet"
-  | "workable";
+  | "workable-helperheroes"
+  | "workable-pearl-talent"
+  | "workable-superstaff"
+  | "workable-hunt-st"
+  | "workable-winning-assistants";
 
 export type ScraperSource = {
   id: SourceId;
@@ -15,6 +19,15 @@ export type ScraperSource = {
   enabled: boolean;
   endpoint?: string;
   note?: string;
+};
+
+export type WorkableSourceId = Extract<SourceId, `workable-${string}`>;
+
+export type WorkableBoard = {
+  id: WorkableSourceId;
+  name: string;
+  slug: string;
+  searchQueries: string[];
 };
 
 export const ROLE_SIGNALS = [
@@ -124,22 +137,78 @@ export const SOURCES: ScraperSource[] = [
     id: "onlinejobs",
     name: "OnlineJobs.ph",
     method: "html",
-    enabled: false,
-    note: "Phase 3: public HTML source not enabled yet.",
+    enabled: true,
+    endpoint: "https://www.onlinejobs.ph/jobseekers/jobsearch",
   },
   {
     id: "jobstreet",
     name: "JobStreet PH",
     method: "html",
-    enabled: false,
-    note: "Phase 3: public HTML source not enabled yet.",
+    enabled: true,
+    endpoint: "https://ph.jobstreet.com/jobs",
   },
   {
-    id: "workable",
-    name: "Workable",
+    id: "workable-helperheroes",
+    name: "Workable · Helper Heroes",
     method: "html",
-    enabled: false,
-    note: "Phase 3: public HTML source not enabled yet.",
+    enabled: true,
+  },
+  {
+    id: "workable-pearl-talent",
+    name: "Workable · Pearl Talent",
+    method: "html",
+    enabled: true,
+  },
+  {
+    id: "workable-superstaff",
+    name: "Workable · SuperStaff",
+    method: "html",
+    enabled: true,
+  },
+  {
+    id: "workable-hunt-st",
+    name: "Workable · Hunt St",
+    method: "html",
+    enabled: true,
+  },
+  {
+    id: "workable-winning-assistants",
+    name: "Workable · Winning Assistants",
+    method: "html",
+    enabled: true,
+  },
+];
+
+export const WORKABLE_BOARDS: WorkableBoard[] = [
+  {
+    id: "workable-helperheroes",
+    name: "Helper Heroes",
+    slug: "helperheroes",
+    searchQueries: [],
+  },
+  {
+    id: "workable-pearl-talent",
+    name: "Pearl Talent",
+    slug: "pearl-talent",
+    searchQueries: [],
+  },
+  {
+    id: "workable-superstaff",
+    name: "SuperStaff",
+    slug: "superstaff",
+    searchQueries: [],
+  },
+  {
+    id: "workable-hunt-st",
+    name: "Hunt St",
+    slug: "hunt-st",
+    searchQueries: ["care", "patient", "scheduler", "coordinator", "caregiver"],
+  },
+  {
+    id: "workable-winning-assistants",
+    name: "Winning Assistants",
+    slug: "winning-assistants",
+    searchQueries: [],
   },
 ];
 

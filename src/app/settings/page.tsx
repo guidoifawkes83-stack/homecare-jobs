@@ -13,7 +13,7 @@ export default function SettingsPage() {
       title="Settings"
     >
       <p className="section-intro">
-        These Phase 2 matching rules are shared by all active scrapers.
+        These matching rules are shared by all active scrapers.
       </p>
       <div className="settings-grid">
         <section aria-labelledby="keywords-heading" className="settings-card">
