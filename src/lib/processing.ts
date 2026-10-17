@@ -210,6 +210,7 @@ export function processJob(job: RawJob): ProcessedJob | null {
 
   return {
     dedupe_key: makeDedupeKey(company, title),
+    source_url: job.source_url,
     title,
     company,
     description: job.description,

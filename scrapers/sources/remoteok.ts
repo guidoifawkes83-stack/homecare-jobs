@@ -31,6 +31,7 @@ export async function scrapeRemoteOk(): Promise<RawJob[]> {
       job.url ??
       (job.slug ? `https://remoteok.com/remote-jobs/${job.slug}` : null);
     if (!url) return [];
+    const sourceUrl = new URL(url, "https://remoteok.com").toString();
 
     const salary =
       job.salary_min || job.salary_max
@@ -47,7 +48,8 @@ export async function scrapeRemoteOk(): Promise<RawJob[]> {
         scheduleText: null,
         regionNote: job.location?.trim() || null,
         postedAt: job.date ?? null,
-        url,
+        url: sourceUrl,
+        source_url: sourceUrl,
         sourceId: "remoteok",
       },
     ];

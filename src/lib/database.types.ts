@@ -5,6 +5,7 @@ export type Database = {
         Row: {
           id: string;
           dedupe_key: string;
+          source_url: string | null;
           title: string;
           company: string | null;
           description: string | null;
@@ -33,6 +34,7 @@ export type Database = {
         Insert: {
           id?: string;
           dedupe_key: string;
+          source_url?: string | null;
           title: string;
           company?: string | null;
           description?: string | null;
@@ -61,6 +63,7 @@ export type Database = {
         Update: {
           id?: string;
           dedupe_key?: string;
+          source_url?: string | null;
           title?: string;
           company?: string | null;
           description?: string | null;

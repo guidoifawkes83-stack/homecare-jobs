@@ -13,6 +13,7 @@ create table sources (
 create table jobs (
   id uuid primary key default gen_random_uuid(),
   dedupe_key text unique not null,
+  source_url text,
   title text not null,
   company text,
   description text,

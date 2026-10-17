@@ -38,6 +38,7 @@ function mapItem(item: unknown): RawJob | null {
   const fullTitle = plainText(stringValue(entry.title));
   const link = stringValue(entry.link).trim();
   if (!fullTitle || !link) return null;
+  const sourceUrl = new URL(link, "https://weworkremotely.com").toString();
 
   const colon = fullTitle.indexOf(":");
   const company = colon > 0 ? fullTitle.slice(0, colon).trim() : "Company not listed";
@@ -56,7 +57,8 @@ function mapItem(item: unknown): RawJob | null {
     scheduleText: null,
     regionNote: null,
     postedAt,
-    url: link,
+    url: sourceUrl,
+    source_url: sourceUrl,
     sourceId: "weworkremotely",
   };
 }

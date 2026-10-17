@@ -9,11 +9,13 @@ export type RawJob = {
   regionNote: string | null;
   postedAt: string | null;
   url: string;
+  source_url: string;
   sourceId: SourceId;
 };
 
 export type ProcessedJob = {
   dedupe_key: string;
+  source_url: string;
   title: string;
   company: string;
   description: string;

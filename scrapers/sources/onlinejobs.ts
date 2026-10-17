@@ -52,6 +52,7 @@ function mapListing(card: ReturnType<ReturnType<typeof load>>): RawJob | null {
     regionNote: null,
     postedAt: parseDate(dateText),
     url: jobUrl,
+    source_url: jobUrl,
     sourceId: "onlinejobs",
   };
 }

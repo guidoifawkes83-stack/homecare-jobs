@@ -61,6 +61,7 @@ export async function scrapeHimalayas(): Promise<RawJob[]> {
         (job.slug ? `https://himalayas.app/jobs/${job.slug}` : null) ??
         job.guid;
       if (!link) continue;
+      const sourceUrl = new URL(link, source.endpoint).toString();
       const region = job.locationRestrictions?.join(", ") || null;
 
       results.push({
@@ -71,7 +72,8 @@ export async function scrapeHimalayas(): Promise<RawJob[]> {
         scheduleText: job.employmentType ?? null,
         regionNote: region,
         postedAt: job.pubDate ?? job.publishedAt ?? null,
-        url: link,
+        url: sourceUrl,
+        source_url: sourceUrl,
         sourceId: "himalayas",
       });
     }

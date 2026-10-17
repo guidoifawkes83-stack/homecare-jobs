@@ -7,6 +7,7 @@ export type JobSourceLink = {
 export type TrackerJob = {
   id: string;
   dedupeKey: string;
+  sourceUrl: string | null;
   title: string;
   company: string;
   description: string;

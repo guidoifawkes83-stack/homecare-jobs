@@ -27,6 +27,7 @@ export async function scrapeWorkingNomads(): Promise<RawJob[]> {
   return jobs.flatMap((job) => {
     if (!job.title || !job.url) return [];
     const tags = Array.isArray(job.tags) ? job.tags.join(", ") : job.tags;
+    const sourceUrl = new URL(job.url, "https://www.workingnomads.com").toString();
 
     return [
       {
@@ -39,7 +40,8 @@ export async function scrapeWorkingNomads(): Promise<RawJob[]> {
         scheduleText: null,
         regionNote: job.location?.trim() || null,
         postedAt: job.pub_date ?? null,
-        url: job.url,
+        url: sourceUrl,
+        source_url: sourceUrl,
         sourceId: "workingnomads",
       },
     ];

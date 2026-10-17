@@ -19,6 +19,7 @@ function rawJob(overrides: Partial<RawJob> = {}): RawJob {
     regionNote: "Philippines eligible",
     postedAt: new Date().toISOString(),
     url: "https://example.com/job/1",
+    source_url: "https://example.com/job/1",
     sourceId: "remotive",
     ...overrides,
   };
@@ -148,6 +149,17 @@ test("scores direct, software, pay, location, and recent roles", () => {
   assert.equal(job.poster_type, "direct");
   assert.equal(job.software.includes("WellSky"), true);
   assert.equal(job.score, 95);
+});
+
+test("copies each raw posting URL into the persisted source_url field", () => {
+  const job = processJob(
+    rawJob({
+      url: "https://jobs.example.com/original",
+      source_url: "https://jobs.example.com/original",
+    }),
+  );
+  assert.ok(job);
+  assert.equal(job.source_url, "https://jobs.example.com/original");
 });
 
 test("merges cross-source duplicates and retains each attribution link", () => {

@@ -67,6 +67,7 @@ export function parseJobStreetResults(html: string, searchUrl: string): RawJob[]
           "time",
         ]) || null,
       url,
+      source_url: url,
       sourceId: "jobstreet",
     });
   });

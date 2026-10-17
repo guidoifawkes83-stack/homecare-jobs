@@ -20,6 +20,7 @@ test("parses public OnlineJobs.ph listing cards without account pages", () => {
   assert.equal(jobs.length, 1);
   assert.equal(jobs[0].title, "Home Care Coordinator");
   assert.equal(jobs[0].url, "https://www.onlinejobs.ph/jobseekers/job/home-care-coordinator-123");
+  assert.equal(jobs[0].source_url, jobs[0].url);
   assert.equal(jobs[0].payText, "$7-$8/hour");
   assert.match(jobs[0].description, /home care schedules/);
   assert.equal(jobs[0].postedAt, "2026-10-15T17:35:49.000Z");
@@ -41,6 +42,7 @@ test("parses public JobStreet job cards and absolute listing URLs", () => {
   assert.equal(jobs[0].title, "Home Care Scheduler");
   assert.equal(jobs[0].company, "Example Care");
   assert.equal(jobs[0].url, "https://ph.jobstreet.com/job/12345678");
+  assert.equal(jobs[0].source_url, jobs[0].url);
   assert.equal(jobs[0].regionNote, "Philippines (Remote)");
 });
 

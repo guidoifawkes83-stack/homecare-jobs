@@ -60,6 +60,10 @@ function searchUrl(board: WorkableBoard, query?: string): string {
 }
 
 function toRawJob(board: WorkableBoard, listing: WorkableListing): RawJob {
+  const sourceUrl = new URL(
+    listing.detailsUrl.replace(/\.md$/i, ""),
+    `https://apply.workable.com/${board.slug}/`,
+  ).toString();
   return {
     title: listing.title,
     company: board.name,
@@ -68,7 +72,8 @@ function toRawJob(board: WorkableBoard, listing: WorkableListing): RawJob {
     scheduleText: listing.schedule,
     regionNote: listing.location,
     postedAt: listing.postedAt,
-    url: listing.detailsUrl.replace(/\.md$/i, ""),
+    url: sourceUrl,
+    source_url: sourceUrl,
     sourceId: board.id,
   };
 }

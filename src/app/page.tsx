@@ -51,6 +51,7 @@ export default async function JobsPage() {
           jobs = rows.map((job) => ({
             id: job.id,
             dedupeKey: job.dedupe_key,
+            sourceUrl: job.source_url,
             title: job.title,
             company: job.company ?? "Company not listed",
             description: job.description ?? "",
@@ -72,6 +73,7 @@ export default async function JobsPage() {
         snapshot?.jobs.map((job) => ({
           id: job.dedupe_key,
           dedupeKey: job.dedupe_key,
+          sourceUrl: job.source_url,
           title: job.title,
           company: job.company,
           description: job.description,
@@ -145,7 +147,18 @@ export default async function JobsPage() {
             <article className="job-row" key={job.id}>
               <div className="job-main">
                 <div className="job-title-line">
-                  <span className="job-title">{job.title}</span>
+                  {job.sourceUrl ? (
+                    <a
+                      className="job-title"
+                      href={job.sourceUrl}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      {job.title}
+                    </a>
+                  ) : (
+                    <span className="job-title">{job.title}</span>
+                  )}
                   <span className={`badge ${job.posterType}`}>
                     {job.posterType === "unknown"
                       ? "Unclassified"
@@ -175,7 +188,18 @@ export default async function JobsPage() {
                             </a>
                           </span>
                         ))
-                      : "Source link unavailable"}
+                      : job.sourceUrl
+                        ? (
+                            <a
+                              className="source-job-link"
+                              href={job.sourceUrl}
+                              rel="noopener noreferrer"
+                              target="_blank"
+                            >
+                              View posting
+                            </a>
+                          )
+                        : "Source link unavailable"}
                   </span>
                   <span aria-hidden="true" className="job-meta-dot">
                     ·

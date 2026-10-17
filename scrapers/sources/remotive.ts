@@ -30,6 +30,7 @@ export async function scrapeRemotive(): Promise<RawJob[]> {
 
   return (response.jobs ?? []).flatMap((job) => {
     if (!job.title || !job.url) return [];
+    const sourceUrl = new URL(job.url, source.endpoint).toString();
     return [
       {
         title: job.title,
@@ -39,7 +40,8 @@ export async function scrapeRemotive(): Promise<RawJob[]> {
         scheduleText: job.job_type?.replace(/_/g, " ") ?? null,
         regionNote: job.candidate_required_location?.trim() || null,
         postedAt: job.publication_date ?? null,
-        url: job.url,
+        url: sourceUrl,
+        source_url: sourceUrl,
         sourceId: "remotive",
       },
     ];
