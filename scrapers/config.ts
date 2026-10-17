@@ -17,20 +17,26 @@ export type ScraperSource = {
   note?: string;
 };
 
-export const KEYWORDS = [
-  "home care scheduler",
-  "homecare scheduler",
-  "caregiver scheduler",
-  "scheduling assistant",
-  "scheduling coordinator",
-  "staffing coordinator",
-  "rostering coordinator",
-  "care coordinator",
-  "dispatch coordinator",
-  "intake coordinator",
-  "recruitment & scheduling",
-  "workforce coordinator",
-  "placement specialist",
+export const ROLE_SIGNALS = [
+  "scheduler",
+  "coordinator",
+  "caregiver",
+  "rostering",
+  "intake",
+  "dispatch",
+];
+
+export const CARE_SIGNALS = [
+  "home care",
+  "homecare",
+  "caregiver",
+  "senior care",
+  "elderly care",
+  "client care",
+  "patient",
+  "healthcare",
+  "in-home",
+  "aged care",
 ];
 
 export const SOFTWARE_TAGS = [

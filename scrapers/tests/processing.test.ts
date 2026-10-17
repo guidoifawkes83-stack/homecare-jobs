@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { makeDedupeKey, mergeDuplicateJobs, normalizePay, processJob } from "../../src/lib/processing";
+import {
+  getJobMatchResult,
+  makeDedupeKey,
+  mergeDuplicateJobs,
+  normalizePay,
+  processJob,
+} from "../../src/lib/processing";
 import type { ProcessedJob, RawJob } from "../types";
 
 function rawJob(overrides: Partial<RawJob> = {}): RawJob {
@@ -34,8 +40,66 @@ test("dedupe key ignores punctuation, accents, and repeated whitespace", () => {
   );
 });
 
-test("keyword match is case-insensitive and rejects unrelated roles", () => {
-  assert.equal(processJob(rawJob({ title: "CARE COORDINATOR" }))?.title, "CARE COORDINATOR");
+test("a role signal and care signal must both occur in the title", () => {
+  for (const title of [
+    "Homecare Scheduler",
+    "Senior Care Coordinator",
+    "Healthcare Rostering Lead",
+    "Patient Intake Specialist",
+    "In-home Dispatch Manager",
+    "Aged Care Scheduler",
+  ]) {
+    const result = getJobMatchResult({ title, description: "A role." });
+    assert.equal(result.matched, true, title);
+  }
+});
+
+test("unrelated coordinator and scheduler roles do not match care roles", () => {
+  for (const title of [
+    "Night Scheduler",
+    "Operations Coordinator",
+    "Renewables Project Scheduler",
+    "Marketing Coordinator",
+    "Travel Coordinator",
+    "Principal Product Manager Strategic Initiatives",
+    "Clinical Coordination Manager",
+    "Regional Finance Manager (Serbia)",
+    "CDQI Audit Specialist",
+    "Regional Rostering Lead",
+    "Intake Specialist",
+    "Dispatch Manager",
+  ]) {
+    const result = getJobMatchResult({ title, description: "A role in healthcare." });
+    assert.equal(result.matched, false, title);
+  }
+});
+
+test("description signals cannot qualify a title, and exclusions are reported", () => {
+  assert.equal(
+    getJobMatchResult({
+      title: "Night Scheduler",
+      description: "A senior care organization that needs a scheduler.",
+    }).rejectionReason,
+    "Title has none of the required care signals: home care, homecare, caregiver, senior care, elderly care, client care, patient, healthcare, in-home, aged care.",
+  );
+  assert.match(
+    getJobMatchResult({
+      title: "Home Care Scheduler",
+      description: "Applicants must reside in the United States.",
+    }).rejectionReason ?? "",
+    /Matched exclusion rule/,
+  );
+  assert.equal(
+    getJobMatchResult({ title: "Caregiver", description: "" }).matched,
+    false,
+  );
+  assert.equal(
+    getJobMatchResult({ title: "Caregiver", description: "" }).matchedSignal,
+    "caregiver",
+  );
+});
+
+test("rejects titles with no job-signal substring", () => {
   assert.equal(
     processJob(rawJob({ title: "Customer Support Specialist", description: "Answer customer calls." })),
     null,

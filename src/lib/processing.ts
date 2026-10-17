@@ -1,8 +1,9 @@
 import {
   AGENCY_COMPANIES,
+  CARE_SIGNALS,
   CURRENCY_RATES,
   EXCLUSIONS,
-  KEYWORDS,
+  ROLE_SIGNALS,
   SOFTWARE_TAGS,
   TITLE_EXCLUSIONS,
 } from "../../scrapers/config";
@@ -26,16 +27,60 @@ export function makeDedupeKey(company: string, title: string): string {
   return `${normalize(company)}|${normalize(title)}`;
 }
 
-export function isMatchingJob(job: Pick<RawJob, "title" | "description">) {
-  const searchable = `${job.title} ${job.description}`;
-  if (!KEYWORDS.some((keyword) => searchable.toLocaleLowerCase().includes(keyword.toLocaleLowerCase()))) {
-    return false;
+export function getJobMatchResult(
+  job: Pick<RawJob, "title" | "description">,
+): {
+  matched: boolean;
+  matchedSignal: string | null;
+  rejectionReason: string | null;
+} {
+  const normalizedTitle = job.title.toLocaleLowerCase();
+  const matchedSignal =
+    ROLE_SIGNALS.find((signal) =>
+      normalizedTitle.includes(signal.toLocaleLowerCase()),
+    ) ?? null;
+  const matchedCareSignal =
+    CARE_SIGNALS.find((signal) =>
+      normalizedTitle.includes(signal.toLocaleLowerCase()),
+    ) ?? null;
+
+  if (!matchedSignal || !matchedCareSignal) {
+    const rejectionReason = !matchedSignal
+      ? `Title has none of the required role signals: ${ROLE_SIGNALS.join(", ")}.`
+      : `Title has none of the required care signals: ${CARE_SIGNALS.join(", ")}.`;
+    return {
+      matched: false,
+      matchedSignal,
+      rejectionReason,
+    };
   }
 
-  return (
-    !exclusionPatterns.some((pattern) => pattern.test(searchable)) &&
-    !titleExclusionPatterns.some((pattern) => pattern.test(job.title))
+  const searchable = `${job.title} ${job.description}`;
+  const exclusion = exclusionPatterns.find((pattern) => pattern.test(searchable));
+  if (exclusion) {
+    return {
+      matched: false,
+      matchedSignal,
+      rejectionReason: `Matched exclusion rule: ${exclusion.source}`,
+    };
+  }
+
+  const titleExclusion = titleExclusionPatterns.find((pattern) =>
+    pattern.test(job.title),
   );
+  if (titleExclusion) {
+    return {
+      matched: false,
+      matchedSignal,
+      rejectionReason: `Matched title exclusion rule: ${titleExclusion.source}`,
+    };
+  }
+
+  return { matched: true, matchedSignal, rejectionReason: null };
+}
+
+export function isMatchingJob(job: Pick<RawJob, "title" | "description">) {
+  return getJobMatchResult(job).matched;
 }
 
 function parseAmount(value: string): number | null {

@@ -1,9 +1,13 @@
-import { mkdir, rename, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { loadEnvConfig } from "@next/env";
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "../src/lib/database.types";
-import { mergeDuplicateJobs, processJob } from "../src/lib/processing";
+import {
+  getJobMatchResult,
+  mergeDuplicateJobs,
+  processJob,
+} from "../src/lib/processing";
 import { readLocalRunSnapshot } from "../src/lib/run-storage";
 import { SOURCES } from "./config";
 import { SourceBlockedError } from "./http";
@@ -12,11 +16,20 @@ import { scrapeRemotive } from "./sources/remotive";
 import { scrapeRemoteOk } from "./sources/remoteok";
 import { scrapeWeWorkRemotely } from "./sources/weworkremotely";
 import { scrapeWorkingNomads } from "./sources/workingnomads";
-import type { LocalRunSnapshot, ProcessedJob, RawJob, SourceRun } from "./types";
+import type {
+  JobAuditRecord,
+  LocalRunAudit,
+  LocalRunSnapshot,
+  ProcessedJob,
+  RawJob,
+  SourceRun,
+} from "./types";
 
 loadEnvConfig(process.cwd());
 
 type Scraper = () => Promise<RawJob[]>;
+
+const auditRecords: JobAuditRecord[] = [];
 
 const scrapers: Partial<Record<string, Scraper>> = {
   remotive: scrapeRemotive,
@@ -43,6 +56,7 @@ async function collectSources(): Promise<{
         status: "disabled",
         startedAt: sourceStartedAt,
         finishedAt: new Date().toISOString(),
+        jobsFetched: 0,
         jobsFound: 0,
         jobsNew: 0,
         error: source.note ?? "Source is disabled.",
@@ -57,6 +71,7 @@ async function collectSources(): Promise<{
         status: "disabled",
         startedAt: sourceStartedAt,
         finishedAt: new Date().toISOString(),
+        jobsFetched: 0,
         jobsFound: 0,
         jobsNew: 0,
         error: source.note ?? "No scraper is configured for this source yet.",
@@ -66,6 +81,16 @@ async function collectSources(): Promise<{
 
     try {
       const rawJobs = await scrape();
+      for (const job of rawJobs) {
+        const result = getJobMatchResult(job);
+        auditRecords.push({
+          sourceId: source.id,
+          title: job.title,
+          matched: result.matched,
+          matchedSignal: result.matchedSignal,
+          rejectionReason: result.rejectionReason,
+        });
+      }
       const processed = rawJobs.flatMap((job) => {
         const match = processJob(job);
         return match ? [match] : [];
@@ -76,6 +101,7 @@ async function collectSources(): Promise<{
         status: "ok",
         startedAt: sourceStartedAt,
         finishedAt: new Date().toISOString(),
+        jobsFetched: rawJobs.length,
         jobsFound: processed.length,
         jobsNew: 0,
         error: null,
@@ -91,6 +117,7 @@ async function collectSources(): Promise<{
         status: blocked ? "blocked" : "error",
         startedAt: sourceStartedAt,
         finishedAt: new Date().toISOString(),
+        jobsFetched: 0,
         jobsFound: 0,
         jobsNew: 0,
         error: message,
@@ -112,7 +139,7 @@ function buildRunCounts(
   for (const run of runs) {
     const sourceJobs = acceptedBySource.get(run.sourceId) ?? [];
     const sourceKeys = new Set(sourceJobs.map((job) => job.dedupe_key));
-    run.jobsFound = sourceKeys.size;
+    run.jobsFound = sourceJobs.length;
     run.jobsNew = [...sourceKeys].filter((key) => {
       if (!newDedupeKeys.has(key) || assignedNewKeys.has(key)) return false;
       assignedNewKeys.add(key);
@@ -130,6 +157,19 @@ async function saveLocalSnapshot(snapshot: LocalRunSnapshot) {
   await writeFile(temporary, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
   await rename(temporary, target);
   console.info(`Saved local results to ${path.relative(process.cwd(), target)}.`);
+}
+
+async function saveRunAudit(audit: LocalRunAudit) {
+  const dataDirectory = path.join(process.cwd(), ".data");
+  const latestTarget = path.join(dataDirectory, "latest-run-audit.json");
+  const latestTemporary = `${latestTarget}.tmp`;
+  const historyTarget = path.join(dataDirectory, "run-audit.jsonl");
+  const entry = `${JSON.stringify(audit)}\n`;
+  await mkdir(dataDirectory, { recursive: true });
+  await writeFile(latestTemporary, `${JSON.stringify(audit, null, 2)}\n`, "utf8");
+  await rename(latestTemporary, latestTarget);
+  await appendFile(historyTarget, entry, "utf8");
+  console.info(`Saved raw-title audit to ${path.relative(process.cwd(), historyTarget)}.`);
 }
 
 function getSupabaseCredentials() {
@@ -284,7 +324,24 @@ async function main() {
     jobs,
     runs,
   };
+  const audit: LocalRunAudit = {
+    startedAt,
+    finishedAt: snapshot.finishedAt,
+    records: auditRecords,
+  };
+  snapshot.audit = audit;
 
+  const totalFetched = runs.reduce((total, run) => total + run.jobsFetched, 0);
+  const matchedRecords = auditRecords.filter(({ matched }) => matched);
+  console.info(`\nTotal fetched: ${totalFetched}`);
+  console.info(`Total matched before deduplication: ${matchedRecords.length}`);
+  console.info("Matched job titles:");
+  for (const record of matchedRecords) {
+    const source = SOURCES.find(({ id }) => id === record.sourceId);
+    console.info(`- [${source?.name ?? record.sourceId}] ${record.title}`);
+  }
+
+  await saveRunAudit(audit);
   const savedToSupabase = await persistSupabase(snapshot, acceptedBySource, runs);
   if (!savedToSupabase) {
     const previousSnapshot = await readLocalRunSnapshot();
@@ -310,7 +367,6 @@ async function main() {
       `- ${source?.name ?? run.sourceId}: ${run.status}, ${run.jobsFound} matched, ${run.jobsNew} new${run.error ? ` — ${run.error}` : ""}`,
     );
   }
-
   const successfulCount = runs.filter(({ status }) => status === "ok").length;
   if (!successfulCount) {
     process.exitCode = 1;

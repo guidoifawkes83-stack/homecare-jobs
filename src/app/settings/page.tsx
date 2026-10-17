@@ -1,5 +1,10 @@
 import { AppShell } from "@/components/app-shell";
-import { EXCLUSIONS, KEYWORDS, TITLE_EXCLUSIONS } from "../../../scrapers/config";
+import {
+  CARE_SIGNALS,
+  EXCLUSIONS,
+  ROLE_SIGNALS,
+  TITLE_EXCLUSIONS,
+} from "../../../scrapers/config";
 
 export default function SettingsPage() {
   return (
@@ -12,10 +17,24 @@ export default function SettingsPage() {
       </p>
       <div className="settings-grid">
         <section aria-labelledby="keywords-heading" className="settings-card">
-          <h2 id="keywords-heading">Search keywords</h2>
-          <p>Role phrases used to find home care scheduling jobs.</p>
+          <h2 id="keywords-heading">Role signals</h2>
+          <p>A title or description must include at least one role signal.</p>
           <div className="settings-values">
-            {KEYWORDS.map((search) => (
+            {ROLE_SIGNALS.map((search) => (
+              <span className="badge" key={search}>
+                {search}
+              </span>
+            ))}
+          </div>
+        </section>
+        <section aria-labelledby="care-signals-heading" className="settings-card">
+          <h2 id="care-signals-heading">Care and health signals</h2>
+          <p>
+            A title or description must also include at least one care or health
+            signal.
+          </p>
+          <div className="settings-values">
+            {CARE_SIGNALS.map((search) => (
               <span className="badge" key={search}>
                 {search}
               </span>
@@ -48,7 +67,7 @@ export default function SettingsPage() {
         <section aria-labelledby="indeed-heading" className="settings-card">
           <h2 id="indeed-heading">Search on Indeed</h2>
           <p>Open prefilled searches on ph.Indeed.com. Indeed is not scraped.</p>
-          {KEYWORDS.slice(0, 3).map((search) => (
+          {ROLE_SIGNALS.slice(0, 3).map((search) => (
             <a
               className="indeed-link"
               href={`https://ph.indeed.com/jobs?q=${encodeURIComponent(search)}`}

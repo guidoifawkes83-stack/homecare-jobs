@@ -35,9 +35,24 @@ export type SourceRun = {
   status: "ok" | "error" | "blocked" | "disabled";
   startedAt: string;
   finishedAt: string;
+  jobsFetched: number;
   jobsFound: number;
   jobsNew: number;
   error: string | null;
+};
+
+export type JobAuditRecord = {
+  sourceId: SourceId;
+  title: string;
+  matched: boolean;
+  matchedSignal: string | null;
+  rejectionReason: string | null;
+};
+
+export type LocalRunAudit = {
+  startedAt: string;
+  finishedAt: string;
+  records: JobAuditRecord[];
 };
 
 export type LocalRunSnapshot = {
@@ -45,4 +60,5 @@ export type LocalRunSnapshot = {
   finishedAt: string;
   jobs: ProcessedJob[];
   runs: SourceRun[];
+  audit?: LocalRunAudit;
 };
